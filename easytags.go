@@ -116,6 +116,7 @@ func parseTags(field *ast.Field, tags []*TagOpt) string {
 		var value string
 		existingTagReg := regexp.MustCompile(fmt.Sprintf("%s:\"[^\"]+\"", tag.Tag))
 		existingTag := existingTagReg.FindString(field.Tag.Value)
+		isID := strings.HasSuffix(fieldName, "ID")
 		if existingTag == "" {
 			var name string
 			switch tag.Case {
@@ -128,7 +129,11 @@ func parseTags(field *ast.Field, tags []*TagOpt) string {
 			default:
 				fmt.Printf("Unknown case option %s", tag.Case)
 			}
-			value = fmt.Sprintf("%s:\"%s\"", tag.Tag, name)
+			if isID {
+				value = fmt.Sprintf("%s:\"-\"", tag.Tag)
+			} else {
+				value = fmt.Sprintf("%s:\"%s,omitempty\"", tag.Tag, name)
+			}
 			tagValues = append(tagValues, value)
 		}
 
@@ -188,6 +193,9 @@ func ToSnake(in string) string {
 
 // ToLowerCamel convert the given string to camelCase
 func ToCamel(in string) string {
+	if strings.HasSuffix(in, "ID") {
+		in = strings.Replace(in, "ID", "Id", 1)
+	}
 	runes := []rune(in)
 	length := len(runes)
 
